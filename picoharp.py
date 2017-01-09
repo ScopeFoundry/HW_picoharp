@@ -3,46 +3,46 @@ Created on Apr 1, 2014
 
 @author: esbarnard
 '''
-
+from __future__ import absolute_import, print_function
 from ScopeFoundry import HardwareComponent
 try:
-    from equipment.pypicoharp import PicoHarp300
+    from .pypicoharp import PicoHarp300
 except Exception as err:
-    print "could not load modules for PicoHarp:", err
+    print("could not load modules for PicoHarp: {}".format(err))
     
-class PicoHarpHardwareComponent(HardwareComponent):
+class PicoHarpHW(HardwareComponent):
 
     def setup(self):
         self.name = "picoharp"
         self.debug = True
         
-        self.count_rate0 = self.add_logged_quantity("count_rate0", dtype=int, ro=True, vmin=0, vmax=100e6)
-        self.count_rate1 = self.add_logged_quantity("count_rate1", dtype=int, ro=True, vmin=0, vmax=100e6)
-        self.mode = self.add_logged_quantity("Mode", dtype=str, choices=[("HIST","HIST"),("T2","T2"),("T3","T3")], initial='HIST')
+        self.count_rate0 = self.settings.New("count_rate0", dtype=int, ro=True, vmin=0, vmax=100e6)
+        self.count_rate1 = self.settings.New("count_rate1", dtype=int, ro=True, vmin=0, vmax=100e6)
+        self.mode = self.settings.New("Mode", dtype=str, choices=[("HIST","HIST"),("T2","T2"),("T3","T3")], initial='HIST')
 
 
-        self.add_logged_quantity("Tacq", dtype=int, unit="ms", vmin=1, vmax=100*60*60*1000)
-        self.add_logged_quantity("Binning", dtype=int, choices=[(str(x), x) for x in range(0,8)])
-        self.add_logged_quantity("Resolution", dtype=int, unit="ps", ro=True, si=False)
+        self.settings.New("Tacq", dtype=int, unit="ms", vmin=1, vmax=100*60*60*1000)
+        self.settings.New("Binning", dtype=int, choices=[(str(x), x) for x in range(0,8)])
+        self.settings.New("Resolution", dtype=int, unit="ps", ro=True, si=False)
 
-        self.add_logged_quantity("SyncDivider", dtype=int, choices=[("1",1),("2",2),("4",4),("8",8)])
-        self.add_logged_quantity("SyncOffset", dtype=int, vmin=-99999, vmax=99999, si=False)
+        self.settings.New("SyncDivider", dtype=int, choices=[("1",1),("2",2),("4",4),("8",8)])
+        self.settings.New("SyncOffset", dtype=int, vmin=-99999, vmax=99999, si=False)
         
-        self.add_logged_quantity("CFDLevel0", dtype=int, unit="mV", vmin=0, vmax=800, si=False)
-        self.add_logged_quantity("CFDZeroCross0", dtype=int,  unit="mV", vmin=0, vmax=20, si=False)
-        self.add_logged_quantity("CFDLevel1", dtype=int, unit="mV", vmin=0, vmax=800, si=False)
-        self.add_logged_quantity("CFDZeroCross1", dtype=int, unit="mV", vmin=0, vmax=20, si=False)
+        self.settings.New("CFDLevel0", dtype=int, unit="mV", vmin=0, vmax=800, si=False)
+        self.settings.New("CFDZeroCross0", dtype=int,  unit="mV", vmin=0, vmax=20, si=False)
+        self.settings.New("CFDLevel1", dtype=int, unit="mV", vmin=0, vmax=800, si=False)
+        self.settings.New("CFDZeroCross1", dtype=int, unit="mV", vmin=0, vmax=20, si=False)
 
-        self.add_logged_quantity("stop_on_overflow", dtype=bool)
+        self.settings.New("stop_on_overflow", dtype=bool)
         
-        self.histogram_channels = self.add_logged_quantity("histogram_channels", dtype=int, ro=False, vmin=0, vmax=2**16, initial=2**16, si=False)
+        self.histogram_channels = self.settings.New("histogram_channels", dtype=int, ro=False, vmin=0, vmax=2**16, initial=2**16, si=False)
 
     def connect(self):
-        if self.debug: print "Connecting to PicoHarp"
+        if self.debug: self.log.info( "Connecting to PicoHarp" )
         
         # Open connection to hardware
         
-        print self.mode.val
+        self.log.debug(str(self.settings['Mode']))
         
         PH = self.picoharp = PicoHarp300(devnum=0, mode = self.mode.val, debug=False)
 
@@ -97,7 +97,7 @@ class PicoHarpHardwareComponent(HardwareComponent):
         
         
         
-        if self.debug: print "Done Connecting to PicoHarp"
+        if self.debug: self.log.debug( "Done Connecting to PicoHarp" )
         
         
     def disconnect(self):
