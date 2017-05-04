@@ -14,14 +14,13 @@ class PicoHarpHW(HardwareComponent):
 
     def setup(self):
         self.name = "picoharp"
-        self.debug = True
         
         self.count_rate0 = self.settings.New("count_rate0", dtype=int, ro=True, vmin=0, vmax=100e6)
         self.count_rate1 = self.settings.New("count_rate1", dtype=int, ro=True, vmin=0, vmax=100e6)
         self.mode = self.settings.New("Mode", dtype=str, choices=[("HIST","HIST"),("T2","T2"),("T3","T3")], initial='HIST')
 
 
-        self.settings.New("Tacq", dtype=int, unit="ms", vmin=1, vmax=100*60*60*1000)
+        self.settings.New("Tacq", dtype=float, unit="s", si=True, vmin=1e-3, vmax=100*60*60)
         self.settings.New("Binning", dtype=int, choices=[(str(x), x) for x in range(0,8)])
         self.settings.New("Resolution", dtype=int, unit="ps", ro=True, si=False)
 
@@ -38,13 +37,13 @@ class PicoHarpHW(HardwareComponent):
         self.histogram_channels = self.settings.New("histogram_channels", dtype=int, ro=False, vmin=0, vmax=2**16, initial=2**16, si=False)
 
     def connect(self):
-        if self.debug: self.log.info( "Connecting to PicoHarp" )
+        if self.settings['debug_mode']: self.log.info( "Connecting to PicoHarp" )
         
         # Open connection to hardware
         
         self.log.debug(str(self.settings['Mode']))
         
-        PH = self.picoharp = PicoHarp300(devnum=0, mode = self.mode.val, debug=False)
+        PH = self.picoharp = PicoHarp300(devnum=0, mode = self.mode.val, debug=self.settings['debug_mode'])
 
         # connect logged quantities
         
@@ -56,8 +55,8 @@ class PicoHarpHW(HardwareComponent):
         LQ["Binning"].updated_value.connect(lambda x, LQ=LQ: LQ["Resolution"].read_from_hardware() )
         
         
-        LQ["Tacq"].hardware_set_func         = PH.set_Tacq
-        LQ["Tacq"].hardware_read_func        = lambda PH=PH: PH.Tacq
+        LQ["Tacq"].hardware_set_func         = PH.set_Tacq_seconds
+        LQ["Tacq"].hardware_read_func        = PH.get_Tacq_seconds
         
         LQ["Binning"].hardware_set_func      = PH.write_Binning
         LQ["Binning"].hardware_read_func     = lambda PH=PH: PH.Binning
@@ -97,7 +96,7 @@ class PicoHarpHW(HardwareComponent):
         
         
         
-        if self.debug: self.log.debug( "Done Connecting to PicoHarp" )
+        if self.settings['debug_mode']: self.log.debug( "Done Connecting to PicoHarp" )
         
         
     def disconnect(self):

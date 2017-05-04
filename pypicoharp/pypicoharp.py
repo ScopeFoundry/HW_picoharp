@@ -10,8 +10,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 if platform.architecture()[0] == '64bit':
-    #phlib = ctypes.WinDLL("phlib64.dll")
-    phlib = ctypes.WinDLL(os.path.join(os.path.dirname(__file__), "phlib64.dll"))
+    phlib = ctypes.WinDLL("phlib64.dll")
+    #phlib = ctypes.WinDLL(os.path.join(os.path.dirname(__file__), "phlib64.dll"))
 
 else:
     phlib = ctypes.WinDLL("phlib.dll")
@@ -56,7 +56,7 @@ class PicoHarp300(object):
         self.handle_err(phlib.PH_GetLibraryVersion(lib_version))
         self.lib_version = lib_version.value
         if self.debug: logger.debug("PHLib Version: '%s'" % self.lib_version)
-        assert self.lib_version == "3.0"
+        assert self.lib_version == b"3.0"
         
         hw_serial = create_string_buffer(8)
         self.handle_err(phlib.PH_OpenDevice(self.devnum, hw_serial)) 
@@ -118,8 +118,16 @@ class PicoHarp300(object):
         if self.debug: logger.debug( "Resolution=%1dps Countrate0=%1d/s Countrate1=%1d/s" % (self.Resolution, self.Countrate0, self.Countrate1) )
 
     def set_Tacq(self, Tacq):
+        "Set Acquisition time in milliseconds"
         self.Tacq = int(Tacq)
         return self.Tacq
+    
+    def set_Tacq_seconds(self, t_sec):
+        "Set Acquisition time in seconds"
+        return self.set_Tacq(t_sec*1000) / 1000.
+    
+    def get_Tacq_seconds(self):
+        return self.Tacq * 1.0e-3
 
     def write_SyncDivider(self, SyncDivider):
         self.SyncDivider = int(SyncDivider)
@@ -217,7 +225,8 @@ class PicoHarp300(object):
         
     def read_histogram_data(self):
         if self.debug: logger.debug( "Read Histogram Data" )
-        self.handle_err(phlib.PH_GetHistogram(self.devnum, self.histogram_data.ctypes.data, 0)) # grab block 0
+        phlib.PH_GetHistogram.argtypes = (ctypes.c_int, ctypes.c_void_p, ctypes.c_int)
+        self.handle_err(phlib.PH_GetHistogram(self.devnum, self.histogram_data.ctypes.data, ctypes.c_int(0) )) # grab block 0
         return self.histogram_data
 
     def read_fifo(self, max_count=TTREADMAX):
