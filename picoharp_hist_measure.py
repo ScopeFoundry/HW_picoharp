@@ -76,7 +76,8 @@ class PicoHarpHistogramMeasure(Measurement):
         
         #FIXME
         #self.plotline.set_xdata(ph.time_array*1e-3)
-        sleep_time = np.min((np.max(0.1*ph.Tacq*1e-3, 0.010), 0.100)) # check every 1/10 of Tacq with limits of 10ms and 100ms
+        print(ph.Tacq)
+        sleep_time = min((max(0.1*ph.Tacq*1e-3, 0.010), 0.100)) # check every 1/10 of Tacq with limits of 10ms and 100ms
         #print("sleep_time", sleep_time, np.max(0.1*ph.Tacq*1e-3, 0.010))
         
         t0 = time.time()
