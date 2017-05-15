@@ -10,8 +10,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 if platform.architecture()[0] == '64bit':
-    phlib = ctypes.WinDLL("phlib64.dll")
-    #phlib = ctypes.WinDLL(os.path.join(os.path.dirname(__file__), "phlib64.dll"))
+    #phlib = ctypes.WinDLL("phlib64.dll")
+    phlib = ctypes.WinDLL(os.path.join(os.path.dirname(__file__), "phlib64.dll"))
 
 else:
     phlib = ctypes.WinDLL("phlib.dll")
