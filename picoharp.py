@@ -5,11 +5,13 @@ Created on Apr 1, 2014
 '''
 from __future__ import absolute_import, print_function
 from ScopeFoundry import HardwareComponent
+import numpy as np
+
 try:
     from .pypicoharp import PicoHarp300
 except Exception as err:
     print("could not load modules for PicoHarp: {}".format(err))
-    
+
 class PicoHarpHW(HardwareComponent):
 
     def setup(self):
@@ -112,3 +114,9 @@ class PicoHarpHW(HardwareComponent):
             
             #clean up hardware object
             del self.picoharp
+
+    def calc_num_hist_chans(self):
+        cr0 = self.settings.count_rate0.read_from_hardware()
+        rep_period_s = 1.0/cr0
+        time_bin_resolution = self.settings['Resolution']*1e-12
+        return int(np.ceil(rep_period_s/time_bin_resolution))
